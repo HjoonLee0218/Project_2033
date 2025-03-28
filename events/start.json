@@ -4,15 +4,7 @@
     "image": "apartment.jpg",
     "store": ["Notebook"],
     "choices": [
-      {
-        "text": "Search the room",
-        "nextScene": "search_room"
-      },
-      {
-        "text": "Open the locked cabinet",
-        "nextScene": "locked_cabinet",
-        "required": "Key"
-      }
+      
     ]
   }
   

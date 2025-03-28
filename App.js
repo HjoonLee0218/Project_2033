@@ -7,50 +7,51 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import startScene from './events/start.json';
+import { scenes } from './eventMap';
 import { supabase } from './supabase';
+import { imageMap } from './imageMap';
 
 export default function App() {
-  const [scene, setScene] = useState(startScene);
+  const [scene, setScene] = useState(scenes.start);
   const [inventory, setInventory] = useState([]);
 
   const handleChoice = async (choice) => {
-    try {
-      const nextScene = require(`./events/${choice.nextScene}.json`);
+    const nextScene = scenes[choice.nextScene];
 
-      // Add items to inventory
-      if (nextScene.store && Array.isArray(nextScene.store)) {
-        const newItems = nextScene.store.filter(
-          (item) => !inventory.includes(item)
-        );
-        setInventory([...inventory, ...newItems]);
-      }
-
-      // Save score if it's an ending scene
-      if (nextScene.isEnding) {
-        const score = inventory.length * 10; // Example scoring logic
-        const { error } = await supabase.from('scores').insert([
-          {
-            player_name: 'Anonymous', // You can replace this later with a name input
-            score: score,
-            ending: nextScene.text,
-          },
-        ]);
-
-        if (error) {
-          console.error('Failed to save score:', error);
-        } else {
-          console.log('Score saved!');
-        }
-      }
-
-      setScene(nextScene);
-    } catch (error) {
-      console.error('Error loading scene:', error);
+    if (!nextScene) {
+      console.error('Scene not found:', choice.nextScene);
+      return;
     }
+
+    // Add items to inventory
+    if (nextScene.store && Array.isArray(nextScene.store)) {
+      const newItems = nextScene.store.filter(
+        (item) => !inventory.includes(item)
+      );
+      setInventory([...inventory, ...newItems]);
+    }
+
+    // Save score if it's an ending
+    if (nextScene.isEnding) {
+      const score = inventory.length * 10;
+      const { error } = await supabase.from('scores').insert([
+        {
+          player_name: 'Anonymous',
+          score: score,
+          ending: nextScene.text,
+        },
+      ]);
+      if (error) {
+        console.error('Failed to save score:', error);
+      } else {
+        console.log('Score saved!');
+      }
+    }
+
+    setScene(nextScene);
   };
 
-  // Filter choices based on required inventory
+  // Show only choices that pass inventory requirements
   const availableChoices =
     scene.choices?.filter((choice) => {
       if (!choice.required) return true;
@@ -59,9 +60,9 @@ export default function App() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {scene.image && (
+      {scene.image && imageMap[scene.image] && (
         <Image
-          source={require(`./assets/${scene.image}`)}
+          source={imageMap[scene.image]}
           style={styles.image}
         />
       )}

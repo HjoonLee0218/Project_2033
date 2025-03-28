@@ -1,0 +1,10 @@
+{
+    "id": "search_room",
+    "text": "You find a flashlight and a mysterious map.",
+    "image": "room.jpg",
+    "store": ["Flashlight"],
+    "choices": [
+      { "text": "Take the map and go back", "nextScene": "hallway" }
+    ]
+  }
+  

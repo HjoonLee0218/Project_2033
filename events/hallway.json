@@ -1,0 +1,10 @@
+{
+    "id": "hallway",
+    "text": "The hallway is dark and eerily quiet.",
+    "image": "hallway.jpg",
+    "choices": [
+      { "text": "Go left", "nextScene": "left_corridor" },
+      { "text": "Go right", "nextScene": "right_corridor" }
+    ]
+  }
+  
