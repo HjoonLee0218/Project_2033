@@ -8,19 +8,40 @@ import {
   ScrollView,
 } from 'react-native';
 import startScene from './events/start.json';
+import { supabase } from './supabase';
 
 export default function App() {
   const [scene, setScene] = useState(startScene);
   const [inventory, setInventory] = useState([]);
 
-  const handleChoice = (choice) => {
+  const handleChoice = async (choice) => {
     try {
       const nextScene = require(`./events/${choice.nextScene}.json`);
 
-      // Add items from "store" to inventory
+      // Add items to inventory
       if (nextScene.store && Array.isArray(nextScene.store)) {
-        const newItems = nextScene.store.filter((item) => !inventory.includes(item));
+        const newItems = nextScene.store.filter(
+          (item) => !inventory.includes(item)
+        );
         setInventory([...inventory, ...newItems]);
+      }
+
+      // Save score if it's an ending scene
+      if (nextScene.isEnding) {
+        const score = inventory.length * 10; // Example scoring logic
+        const { error } = await supabase.from('scores').insert([
+          {
+            player_name: 'Anonymous', // You can replace this later with a name input
+            score: score,
+            ending: nextScene.text,
+          },
+        ]);
+
+        if (error) {
+          console.error('Failed to save score:', error);
+        } else {
+          console.log('Score saved!');
+        }
       }
 
       setScene(nextScene);
@@ -29,11 +50,12 @@ export default function App() {
     }
   };
 
-  // Filter choices by inventory requirement
-  const availableChoices = scene.choices?.filter((choice) => {
-    if (!choice.required) return true;
-    return inventory.includes(choice.required);
-  }) || [];
+  // Filter choices based on required inventory
+  const availableChoices =
+    scene.choices?.filter((choice) => {
+      if (!choice.required) return true;
+      return inventory.includes(choice.required);
+    }) || [];
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -51,6 +73,10 @@ export default function App() {
           <Button title={choice.text} onPress={() => handleChoice(choice)} />
         </View>
       ))}
+
+      {scene.isEnding && (
+        <Text style={styles.ending}>🎉 THE END 🎉</Text>
+      )}
 
       <Text style={styles.sectionTitle}>Inventory:</Text>
       <Text>{inventory.length > 0 ? inventory.join(', ') : 'Empty'}</Text>
@@ -70,4 +96,12 @@ const styles = StyleSheet.create({
   },
   choiceButton: { marginBottom: 10 },
   sectionTitle: { marginTop: 30, fontWeight: 'bold', fontSize: 16 },
+  ending: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginTop: 30,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
 });
